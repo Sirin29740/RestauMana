@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>餐厅点菜管理系统 - 用户登录</title>
+  <style>
+    * {
+      margin: 0; padding: 0; box-sizing: border-box;
+      font-family: 'Microsoft YaHei', sans-serif;
+    }
+    body {
+      background-color: #f5f5f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .container {
+      width: 100%;
+      max-width: 400px;
+      padding: 20px;
+    }
+    .login-card {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    .login-header {
+      background: #e74c3c;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+    .logo {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    .login-body {
+      padding: 30px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+      color: #555;
+    }
+    input.form-control {
+      width: 100%;
+      padding: 12px 15px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+      transition: border-color 0.3s;
+    }
+    input.form-control:focus {
+      border-color: #e74c3c;
+      outline: none;
+    }
+    .btn {
+      width: 100%;
+      padding: 12px 25px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 16px;
+      background-color: #e74c3c;
+      color: white;
+      transition: background-color 0.3s;
+    }
+    .btn:hover {
+      background-color: #c0392b;
+    }
+    .register-link {
+      margin-top: 20px;
+      text-align: center;
+      color: #666;
+    }
+    .register-link a {
+      color: #e74c3c;
+      font-weight: bold;
+      text-decoration: none;
+    }
+    .register-link a:hover {
+      text-decoration: underline;
+    }
+    .error-message {
+      color: #e74c3c;
+      font-size: 14px;
+      margin-top: 5px;
+      display: none;
+    }
+    .success-message {
+      color: #2ecc71;
+      text-align: center;
+      margin-bottom: 20px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="login-card">
+    <div class="login-header">
+      <div class="logo">餐厅点菜管理系统</div>
+      <div>用户登录</div>
+    </div>
+    <div class="login-body">
+      <div id="success-message" class="success-message">
+        登录成功！正在跳转...
+      </div>
+      <form id="login-form">
+        <div class="form-group">
+          <label for="phone">手机号码</label>
+          <input type="tel" id="phone" name="phone" class="form-control" placeholder="请输入手机号码" required />
+          <div id="phone-error" class="error-message">请输入有效的手机号码</div>
+        </div>
+        <div class="form-group">
+          <label for="password">密码</label>
+          <input type="password" id="password" name="password" class="form-control" placeholder="请输入密码" required />
+          <div id="password-error" class="error-message">请输入密码</div>
+        </div>
+        <button type="submit" class="btn">登录</button>
+        <div class="register-link">
+          还没有账户？<a href="register.html">立即注册</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.getElementById('login-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const phone = document.getElementById('phone').value.trim();
+    const password = document.getElementById('password').value;
+
+    let valid = true;
+
+    // 验证手机号格式
+    const phoneRegex = /^1[3-9]\d{9}$/;
+    if (!phoneRegex.test(phone)) {
+      document.getElementById('phone-error').style.display = 'block';
+      valid = false;
+    } else {
+      document.getElementById('phone-error').style.display = 'none';
+    }
+
+    // 验证密码是否为空
+    if (!password) {
+      document.getElementById('password-error').style.display = 'block';
+      valid = false;
+    } else {
+      document.getElementById('password-error').style.display = 'none';
+    }
+
+    if (!valid) return;
+
+    try {
+      const loginData = { phone, password };
+      console.log("登录发送数据:", loginData);
+
+      const response = await fetch('/user/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(loginData)
+      });
+
+      const result = await response.json();
+      console.log(result)
+      if (response.ok) {
+        document.getElementById('login-form').style.display = 'none';
+        const successMessage = document.getElementById('success-message');
+        successMessage.style.display = 'block';
+        // 3秒后跳转
+        setTimeout(() => {
+          window.location.href = '/order/cuspage'; // 登录后主页
+        });
+      } else {
+        alert(result.msg || '登录失败，请重试');
+      }
+    } catch (err) {
+      console.error('登录请求失败:', err);
+      alert('网络错误，请检查您的连接');
+    }
+  });
+</script>
+
+</body>
+</html>

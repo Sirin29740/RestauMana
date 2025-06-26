@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <title>选择餐桌 - 餐厅管理系统</title>
+    <style>
+        body {
+            font-family: "Microsoft YaHei", sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f4f7f9;
+            color: #333;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        header h2 {
+            font-weight: 600;
+            color: #00aaff;
+            margin-bottom: 5px;
+        }
+
+        #tableList {
+            max-width: 900px;
+            margin: 0 auto;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .table-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+            padding: 20px 25px;
+            width: 180px;
+            text-align: center;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .table-card:hover:not(.disabled) {
+            transform: translateY(-6px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.18);
+        }
+
+        .table-card.disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .table-number {
+            font-size: 26px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #0077cc;
+        }
+
+        .table-info {
+            font-size: 14px;
+            margin-bottom: 8px;
+            color: #555;
+        }
+
+        .status {
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .status.available {
+            color: #28a745;
+        }
+
+        .status.occupied {
+            color: #dc3545;
+        }
+
+        button.select-btn {
+            background-color: #00aaff;
+            border: none;
+            color: white;
+            font-weight: 600;
+            padding: 8px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button.select-btn:hover:not(:disabled) {
+            background-color: #0077cc;
+        }
+
+        button.select-btn:disabled {
+            cursor: not-allowed;
+            background-color: #ccc;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h2>请选择一个可用的餐桌</h2>
+    <p>点击“选择”进入点餐页面</p>
+</header>
+
+<div id="tableList">加载中...</div>
+
+<script>
+    fetch('/order/listtables')
+        .then(res => res.json())
+        .then(data => {
+            const list = document.getElementById('tableList');
+            list.innerHTML = '';
+
+            data.forEach(table => {
+                const card = document.createElement('div');
+                card.className = 'table-card';
+                if (table.status !== '空闲') {
+                    card.classList.add('disabled');
+                }
+
+                const statusClass = table.status === '空闲' ? 'available' : 'occupied';
+                const statusText = table.status === '空闲' ? '🟢 空闲' : '🔴 已占用';
+
+                card.innerHTML = `
+                    <div class="table-number">餐桌 ${table.ID}</div>
+                    <div class="table-info">最大人数：${table.maxnum}</div>
+                    <div class="status ${statusClass}">${statusText}</div>
+                    <button class="select-btn" ${table.status !== '空闲' ? 'disabled' : ''} onclick="selectTable(${table.ID})">选择</button>
+                `;
+
+                list.appendChild(card);
+            });
+        })
+        .catch(err => {
+            document.getElementById('tableList').textContent = '加载失败：' + err;
+        });
+
+    function selectTable(id) {
+        localStorage.setItem('selectedTableID', id);
+        alert('你已选择餐桌 ' + id);
+        window.location.href = `/order/neworder/${id}`;
+    }
+</script>
+
+</body>
+</html>

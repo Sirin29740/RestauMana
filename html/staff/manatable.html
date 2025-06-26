@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <title>管理餐桌</title>
+    <style>
+        body {
+            font-family: "Microsoft YaHei", sans-serif;
+            background-color: #f0f2f5;
+            padding: 30px 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        #addTableBtn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            transition: background-color 0.3s ease;
+            align-self: flex-start;
+        }
+        #addTableBtn:hover {
+            background-color: #2980b9;
+        }
+        table {
+            width: 100%;
+            max-width: 900px;
+            border-collapse: collapse;
+            background-color: white;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        th, td {
+            padding: 14px 18px;
+            border-bottom: 1px solid #e1e4e8;
+            text-align: center;
+            font-size: 15px;
+            color: #34495e;
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            user-select: none;
+        }
+        tr:hover {
+            background-color: #f9fafb;
+        }
+        button {
+            padding: 7px 16px;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+            margin: 0 5px;
+            font-size: 14px;
+        }
+        button.edit-btn {
+            background-color: #f39c12;
+        }
+        button.edit-btn:hover {
+            background-color: #d78c0a;
+        }
+        button.delete-btn {
+            background-color: #e74c3c;
+        }
+        button.delete-btn:hover {
+            background-color: #c0392b;
+        }
+        @media (max-width: 768px) {
+            body {
+                padding: 15px 10px;
+            }
+            table, #addTableBtn {
+                max-width: 100%;
+            }
+            th, td {
+                padding: 10px 8px;
+                font-size: 13px;
+            }
+            button {
+                padding: 6px 12px;
+                font-size: 12px;
+                margin: 0 3px;
+            }
+        }
+    </style>
+</head>
+<body>
+<a href="/admin/adpage" id="backBtn">← 返回首页</a>
+
+<style>
+    #backBtn {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        background-color: #7f8c8d;
+        color: white;
+        padding: 10px 16px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: bold;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        transition: background-color 0.3s ease;
+        z-index: 999;
+    }
+
+    #backBtn:hover {
+        background-color: #636e72;
+    }
+</style>
+<h2>餐桌列表</h2>
+<button id="addTableBtn" onclick="addTable()">添加餐桌</button>
+
+<table>
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>状态</th>
+        <th>最大人数</th>
+        <th>创建时间</th>
+        <th>操作</th>
+    </tr>
+    </thead>
+    <tbody id="tableList">
+    <!-- 动态填充 -->
+    </tbody>
+</table>
+
+<script>
+    function loadTables() {
+        fetch("/order/listtables")
+            .then(res => {
+                if (!res.ok) throw new Error("加载失败");
+                return res.json();
+            })
+            .then(data => {
+                const tbody = document.getElementById("tableList");
+                tbody.innerHTML = "";
+                data.forEach(table => {
+                    const tr = document.createElement("tr");
+                    const createdDate = table.CreatedAt ? new Date(table.CreatedAt).toLocaleDateString() : '';
+                    tr.innerHTML = `
+                        <td>${table.ID}</td>
+                        <td>${table.status}</td>
+                        <td>${table.maxnum}</td>
+                        <td>${createdDate}</td>
+                        <td>
+                            <button class="edit-btn" onclick="editTable(${table.ID})">修改</button>
+                            <button class="delete-btn" onclick="deleteTable(${table.ID})">删除</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            })
+            .catch(err => {
+                alert("加载餐桌失败: " + err.message);
+                console.error(err);
+            });
+    }
+
+    function editTable(id) {
+        window.location.href = `/staff/updatetable/${id}`;
+    }
+
+    function deleteTable(id) {
+        if (confirm("确认删除该餐桌？")) {
+            fetch(`/staff/deletetable/${id}`, { method: "DELETE" })
+                .then(res => {
+                    if (!res.ok) throw new Error("删除失败");
+                    return res.json();
+                })
+                .then(result => {
+                    alert(result.message || "删除成功");
+                    loadTables();
+                })
+                .catch(err => alert("删除失败：" + err.message));
+        }
+    }
+
+    function addTable() {
+        window.location.href = "/staff/newtable";
+    }
+
+    // 初始化加载
+    loadTables();
+</script>
+
+</body>
+</html>

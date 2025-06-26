@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <title>点餐页面</title>
+    <style>
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f2f5;
+            margin: 40px auto;
+            max-width: 960px;
+            color: #333;
+        }
+        h2, h3 {
+            font-weight: 700;
+            color: #222;
+            margin-bottom: 12px;
+        }
+        #tableIdDisplay {
+            color: #007bff;
+        }
+
+        #menu {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            margin-bottom: 36px;
+        }
+        .dish-card {
+            background: #fff;
+            width: 220px;
+            border-radius: 10px;
+            box-shadow: 0 3px 8px rgb(0 0 0 / 0.1);
+            overflow: hidden;
+            transition: box-shadow 0.3s ease;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+        }
+        .dish-card:hover {
+            box-shadow: 0 6px 16px rgb(0 0 0 / 0.15);
+        }
+        .dish-card img {
+            width: 100%;
+            height: 140px;
+            object-fit: cover;
+            border-bottom: 1px solid #eee;
+        }
+        .dish-info {
+            padding: 14px 16px;
+            flex-grow: 1;
+        }
+        .dish-info h4 {
+            margin: 0 0 6px;
+            font-size: 1.1rem;
+            color: #222;
+        }
+        .dish-info p {
+            margin: 0;
+            font-weight: 600;
+            color: #28a745;
+            font-size: 1rem;
+        }
+        .dish-card button {
+            background-color: #28a745;
+            border: none;
+            padding: 10px 0;
+            font-size: 1rem;
+            font-weight: 600;
+            color: white;
+            border-radius: 0 0 10px 10px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            outline-offset: 3px;
+        }
+        .dish-card button:hover {
+            background-color: #218838;
+        }
+        #orderList {
+            background: #fff;
+            border-radius: 10px;
+            padding: 20px 24px;
+            box-shadow: 0 3px 12px rgb(0 0 0 / 0.1);
+            min-height: 120px;
+            margin-bottom: 20px;
+            font-size: 1rem;
+        }
+        #orderList li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+        }
+        #orderList li:last-child {
+            border-bottom: none;
+        }
+        #total {
+            font-weight: 700;
+            color: #28a745;
+            font-size: 1.2rem;
+        }
+        #submitBtn {
+            background-color: #007bff;
+            border: none;
+            padding: 14px 32px;
+            font-size: 1.15rem;
+            color: white;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            box-shadow: 0 4px 10px rgb(0 123 255 / 0.3);
+        }
+        #submitBtn:hover {
+            background-color: #0056b3;
+            box-shadow: 0 6px 15px rgb(0 86 179 / 0.4);
+        }
+        /* 响应式适配 */
+        @media (max-width: 600px) {
+            #menu {
+                justify-content: center;
+            }
+            .dish-card {
+                width: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<h2>菜单</h2>
+<p>当前桌号：<strong id="tableIdDisplay"></strong></p>
+<div id="menu" aria-label="菜品列表"></div>
+
+<h3>当前订单</h3>
+<ul id="orderList" aria-live="polite" aria-relevant="additions"></ul>
+<p>总价：<span id="total">0</span> 元</p>
+
+<button id="submitBtn" onclick="submitOrder()">提交订单</button>
+
+<script>
+    const pathParts = window.location.pathname.split('/');
+    const tableId = pathParts[pathParts.length - 1];
+    document.getElementById("tableIdDisplay").textContent = tableId;
+
+    const menuDiv = document.getElementById("menu");
+    const orderList = document.getElementById("orderList");
+    const totalSpan = document.getElementById("total");
+
+    let order = [];
+
+    function renderOrder() {
+        orderList.innerHTML = "";
+        let total = 0;
+        order.forEach(item => {
+            total += item.price * item.quantity;
+            const li = document.createElement("li");
+            li.textContent = `${item.name} x ${item.quantity}`;
+            const priceSpan = document.createElement("span");
+            priceSpan.textContent = `${item.price * item.quantity} 元`;
+            li.appendChild(priceSpan);
+            orderList.appendChild(li);
+        });
+        totalSpan.textContent = total;
+    }
+
+    function addToOrder(dish) {
+        const existing = order.find(item => item.id === dish.ID);
+        if (existing) {
+            existing.quantity += 1;
+        } else {
+            order.push({
+                id: dish.ID,
+                name: dish.dishname,
+                price: dish.price,
+                quantity: 1
+            });
+        }
+        renderOrder();
+    }
+
+    fetch("/order/listdishes")
+        .then(res => res.json())
+        .then(data => {
+            data.forEach(dish => {
+                const div = document.createElement("div");
+                div.className = "dish-card";
+                div.innerHTML = `
+                    <img src="${dish.picture || '/uploads/default.jpg'}" alt="菜品图片">
+                    <div class="dish-info">
+                        <h4>${dish.dishname}</h4>
+                        <p>价格：${dish.price} 元</p>
+                    </div>
+                    <button onclick='addToOrder(${JSON.stringify(dish)})'>添加</button>
+                `;
+                menuDiv.appendChild(div);
+            });
+        });
+
+    function submitOrder() {
+        if (order.length === 0) {
+            alert("请选择菜品");
+            return;
+        }
+        fetch(`/order/neworder/${tableId}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ items: order })
+        })
+            .then(async res => {
+                const contentType = res.headers.get("content-type");
+                if (res.ok) {
+                    const data = await res.json();
+                    alert("订单提交成功！订单ID：" + data.id);
+                    order = [];
+                    renderOrder();
+                } else {
+                    const errorText = contentType && contentType.includes("application/json")
+                        ? (await res.json()).error
+                        : await res.text();
+                    alert("提交失败：" + errorText);
+                }
+            })
+            .catch(err => {
+                console.error("提交失败", err);
+                alert("网络或服务器错误");
+            });
+    }
+</script>
+
+</body>
+</html>

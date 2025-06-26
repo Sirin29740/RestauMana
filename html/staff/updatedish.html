@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>修改菜品信息</title>
+    <style>
+        body {
+            font-family: Arial;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        h2 {
+            color: #333;
+        }
+
+        label {
+            display: block;
+            margin-top: 12px;
+        }
+
+        input, select {
+            width: 300px;
+            padding: 6px;
+            margin-top: 4px;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 8px 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        img {
+            margin-top: 10px;
+            max-width: 200px;
+            border: 1px solid #ccc;
+        }
+
+        #msg {
+            margin-top: 15px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<h2>修改菜品信息</h2>
+
+<form id="dishForm" enctype="multipart/form-data">
+    <label for="dishname">菜名：</label>
+    <input type="text" id="dishname" name="dishname">
+
+    <label for="type">类型：</label>
+    <input type="text" id="type" name="type">
+
+    <label for="price">价格（元）：</label>
+    <input type="number" id="price" name="price">
+
+    <label>当前图片：</label>
+    <img id="dishImg" src="" alt="暂无图片">
+
+    <label for="picture">更换图片（可选）：</label>
+    <input type="file" id="picture" name="picture" accept="image/*">
+
+    <button type="submit">提交修改</button>
+    <div id="msg"></div>
+</form>
+
+<script>
+    const pathParts = window.location.pathname.split('/');
+    const dishId = pathParts[pathParts.length - 1];
+    const form = document.getElementById("dishForm");
+    const msgDiv = document.getElementById("msg");
+
+    // 加载菜品信息
+    fetch(`/order/dishinfo/${dishId}`)
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById("dishname").value = data.dishname || '';
+            document.getElementById("type").value = data.type || '';
+            document.getElementById("price").value = data.price || '';
+            if (data.picture) {
+                document.getElementById("dishImg").src = data.picture;
+            } else {
+                document.getElementById("dishImg").alt = "无图片";
+            }
+        })
+        .catch(err => {
+            console.error("加载失败", err);
+            msgDiv.textContent = "加载失败：" + err;
+            msgDiv.style.color = 'red';
+        });
+
+    // 表单提交事件
+    form.onsubmit = async function (e) {
+        e.preventDefault(); // 防止默认表单提交
+
+        const formData = new FormData(form); // 读取整个表单字段，包括图片
+
+        try {
+            const response = await fetch(`/staff/updatedish/${dishId}`, {
+                method: "POST",
+                body: formData
+            });
+
+            const contentType = response.headers.get("content-type") || "";
+            if (contentType.includes("application/json")) {
+                const result = await response.json();
+                if (response.ok) {
+                    alert(result.message || "更新成功！");
+                    window.location.href = "/staff/manadishes";
+                } else {
+                    alert(result.error || "更新失败");
+                }
+            } else {
+                const text = await response.text();
+                alert("服务器返回非JSON：" + text);
+            }
+        } catch (err) {
+            console.error("提交失败", err);
+            alert("提交失败，请检查网络或服务器状态");
+        }
+    };
+</script>
+
+</body>
+</html>

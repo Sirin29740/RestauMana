@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>餐厅管理系统 - 首页</title>
+    <style>
+        body {
+            font-family: "Microsoft YaHei", sans-serif;
+            background: #f2f2f2;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: #1e90ff;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        h1 {
+            margin: 0;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 40px auto;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 30px;
+        }
+
+        .card {
+            background: white;
+            width: 250px;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .card h2 {
+            font-size: 20px;
+            color: #333;
+        }
+
+        .card p {
+            font-size: 14px;
+            color: #777;
+        }
+
+        .card a {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 8px 16px;
+            background-color: #1e90ff;
+            color: white;
+            border-radius: 5px;
+            text-decoration: none;
+            transition: 0.2s;
+        }
+
+        .card a:hover {
+            background-color: #0f75d2;
+        }
+
+        footer {
+            text-align: center;
+            color: #aaa;
+            padding: 20px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>欢迎使用餐厅管理系统</h1>
+    <p>请选择您的身份以开始操作</p>
+</header>
+
+<div class="container">
+    <div class="card">
+        <h2>员工入口</h2>
+        <p>录入菜品、桌位与处理订单</p>
+        <a href="/user/stalogin">进入</a>
+    </div>
+
+    <div class="card">
+        <h2>顾客注册</h2>
+        <p>注册成为顾客，体验在线点餐</p>
+        <a href="/user/register">注册</a>
+    </div>
+
+    <div class="card">
+        <h2>顾客登录</h2>
+        <p>查看菜单、选择餐桌、下订单</p>
+        <a href="/user/login">登录</a>
+    </div>
+</div>
+
+<footer>
+    餐厅管理系统 © 2025 - 开发者：Kirot
+</footer>
+
+</body>
+</html>

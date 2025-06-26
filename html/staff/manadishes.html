@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <title>菜谱管理</title>
+    <style>
+        body {
+            font-family: Arial, "Microsoft YaHei", sans-serif;
+            padding: 20px;
+            background-color: #f7f7f7;
+            color: #333;
+        }
+        h2 {
+            color: #333;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .top-bar {
+            max-width: 1200px;
+            margin: 0 auto 20px;
+            text-align: right;
+        }
+        .btn-add {
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .btn-add:hover {
+            background-color: #1e8449;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 0;
+            background: #fff;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+            box-shadow: 0 0 10px rgb(0 0 0 / 0.1);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: center;
+            font-size: 14px;
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+        }
+        img {
+            max-height: 80px;
+        }
+        button {
+            padding: 5px 12px;
+            margin: 2px;
+            cursor: pointer;
+            border: none;
+            border-radius: 3px;
+            font-size: 13px;
+        }
+        .edit-btn {
+            background-color: #007bff;
+            color: white;
+        }
+        .delete-btn {
+            background-color: #dc3545;
+            color: white;
+        }
+        tbody tr:hover {
+            background-color: #f0f8ff;
+        }
+    </style>
+</head>
+<body>
+
+<h2>菜谱管理</h2>
+
+<div class="top-bar">
+    <button class="btn-add" onclick="window.location.href='/staff/newdish'">新建菜谱</button>
+</div>
+
+<table id="dishTable">
+    <thead>
+    <tr>
+        <th>菜名</th>
+        <th>类型</th>
+        <th>价格 (元)</th>
+        <th>图片</th>
+        <th>操作</th>
+    </tr>
+    </thead>
+    <tbody id="dishBody">
+    <!-- 菜品列表将由 JS 动态插入 -->
+    </tbody>
+</table>
+
+<script>
+    async function loadDishes() {
+        try {
+            const res = await fetch('/order/listdishes');
+            const dishes = await res.json();
+
+            const tbody = document.getElementById("dishBody");
+            tbody.innerHTML = "";
+
+            dishes.forEach(dish => {
+                const tr = document.createElement("tr");
+
+                tr.innerHTML = `
+                    <td>${dish.dishname}</td>
+                    <td>${dish.type}</td>
+                    <td>${dish.price}</td>
+                    <td><img src="${dish.picture}" alt="图片不可见"></td>
+                    <td>
+                        <button class="edit-btn" onclick="editDish(${dish.ID})">修改</button>
+                        <button class="delete-btn" onclick="deleteDish(${dish.ID})">删除</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+        } catch (err) {
+            console.error("加载菜谱失败", err);
+            alert("加载菜谱失败");
+        }
+    }
+
+    function editDish(id) {
+        window.location.href = `/staff/updatedish/${id}`;
+    }
+
+    async function deleteDish(id) {
+        if (!confirm("确定要删除这个菜品吗？")) return;
+
+        try {
+            const res = await fetch(`/staff/deletedish/${id}`, {
+                method: 'DELETE'
+            });
+
+            if (!res.ok) {
+                const errData = await res.json();
+                throw new Error(errData.error || '删除失败');
+            }
+
+            alert("删除成功！");
+            loadDishes();
+        } catch (err) {
+            console.error("删除失败", err);
+            alert("删除失败: " + err.message);
+        }
+    }
+
+    loadDishes();
+</script>
+
+</body>
+</html>

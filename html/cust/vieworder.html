@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>查看订单 - 餐厅管理系统</title>
+  <style>
+    body {
+      font-family: "Microsoft YaHei", sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f4f7f9;
+    }
+
+    header {
+      background-color: #00aaff;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+
+    h1 {
+      margin: 0;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 30px auto;
+      padding: 20px;
+    }
+
+    .order-card {
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .order-header {
+      font-weight: bold;
+      margin-bottom: 12px;
+      font-size: 16px;
+      color: #333;
+    }
+
+    .item {
+      padding-left: 15px;
+      margin-bottom: 4px;
+      font-size: 14px;
+      color: #555;
+    }
+
+    .error {
+      color: red;
+      text-align: center;
+      margin-top: 40px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>查看订单</h1>
+  <p>以下是所有订单信息</p>
+</header>
+
+<div class="container" id="orderContainer">加载中...</div>
+
+<script>
+  fetch("/order/listorder")
+          .then(res => res.json())
+          .then(data => {
+            const container = document.getElementById("orderContainer");
+            container.innerHTML = ""; // 清空加载中
+
+            if (!data || data.length === 0) {
+              container.innerHTML = "<p class='error'>暂无订单记录</p>";
+              return;
+            }
+
+            data.forEach(order => {
+              const div = document.createElement("div");
+              div.className = "order-card";
+
+              const header = `
+          <div class="order-header">
+            订单号：${order.ID} | 餐桌：${order.tableid} | 顾客电话：${order.telephone}<br>
+            总价：${order.totalprice} 元
+          </div>
+        `;
+
+              const items = order.dishorder.map(item => `
+          <div class="item">
+            ${item.dishname} x ${item.quantity} = ${item.price * item.quantity} 元
+          </div>
+        `).join("");
+
+              div.innerHTML = header + items;
+              container.appendChild(div);
+            });
+          })
+          .catch(err => {
+            console.error(err);
+            document.getElementById("orderContainer").innerHTML = "<p class='error'>加载订单失败，请稍后再试。</p>";
+          });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <title>订单管理 - 餐厅系统</title>
+    <style>
+        body {
+            font-family: "Microsoft YaHei", sans-serif;
+            padding: 30px;
+            background: #f0f2f5;
+        }
+
+        h2 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .order-card {
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            padding: 20px;
+            margin-bottom: 25px;
+            transition: transform 0.2s ease;
+        }
+
+        .order-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 12px;
+        }
+
+        .order-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            font-size: 15px;
+            color: #444;
+        }
+
+        .order-info span {
+            background-color: #f4f6f8;
+            padding: 6px 10px;
+            border-radius: 6px;
+        }
+
+        .order-dishes {
+            padding-left: 10px;
+        }
+
+        .dish-item {
+            margin: 6px 0;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .finish-btn {
+            background-color: #ff5252;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .finish-btn:hover {
+            background-color: #e84118;
+        }
+
+        .no-orders {
+            text-align: center;
+            font-size: 18px;
+            color: #888;
+            margin-top: 50px;
+        }
+    </style>
+</head>
+<body>
+
+<h2>正在进行的订单</h2>
+<div id="ordersContainer">加载中...</div>
+
+<script>
+    async function fetchOrders() {
+        try {
+            const res = await fetch('/staff/listgoorder');
+            if (!res.ok) throw new Error('网络错误：' + res.status);
+            const orders = await res.json();
+            renderOrders(orders);
+        } catch (err) {
+            document.getElementById('ordersContainer').innerHTML = '<p class="no-orders">加载订单失败：' + err.message + '</p>';
+        }
+    }
+
+    function renderOrders(orders) {
+        const container = document.getElementById('ordersContainer');
+        container.innerHTML = '';
+        if (orders.length === 0) {
+            container.innerHTML = '<p class="no-orders">当前没有正在进行的订单</p>';
+            return;
+        }
+
+        orders.forEach(order => {
+            const card = document.createElement('div');
+            card.className = 'order-card';
+
+            let dishesHTML = '';
+            if (order.Dishorder && order.Dishorder.length > 0) {
+                order.Dishorder.forEach(dish => {
+                    dishesHTML += `<div class="dish-item">${dish.Dishname} x ${dish.Quantity} = ${dish.Price * dish.Quantity} 元</div>`;
+                });
+            }
+
+            card.innerHTML = `
+                <div class="order-header">
+                    <div class="order-info">
+                        <span>订单ID：${order.ID}</span>
+                        <span>餐桌号：${order.tableid}</span>
+                        <span>顾客电话：${order.telephone}</span>
+                        <span>总价：${order.totalprice} 元</span>
+                    </div>
+                    <button class="finish-btn" onclick="finishOrder(${order.ID})">结束订单</button>
+                </div>
+                <div class="order-dishes">${dishesHTML}</div>
+            `;
+
+            container.appendChild(card);
+        });
+    }
+
+    async function finishOrder(orderId) {
+        if (!confirm("确定要结束该订单吗？")) return;
+
+        try {
+            const res = await fetch(`/staff/finishorder/${orderId}`, {
+                method: 'POST'
+            });
+
+            const result = await res.json();
+            if (res.ok) {
+                alert(result.message || "订单已结束");
+                fetchOrders(); // 刷新订单
+            } else {
+                alert(result.error || "结束失败");
+            }
+        } catch (err) {
+            alert('操作失败: ' + err.message);
+        }
+    }
+
+    fetchOrders();
+</script>
+
+</body>
+</html>
