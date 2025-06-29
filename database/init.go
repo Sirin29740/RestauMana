@@ -24,15 +24,15 @@ func Initdb() *gorm.DB {
 	}
 	err2 := db.AutoMigrate(&Table{})
 	if err2 != nil {
-		fmt.Println("failed to migrate customer", err2.Error())
+		fmt.Println("failed to migrate table", err2.Error())
 	}
 	err3 := db.AutoMigrate(&Dish{})
 	if err3 != nil {
-		fmt.Println("failed to migrate customer", err3.Error())
+		fmt.Println("failed to migrate dish", err3.Error())
 	}
 	err4 := db.AutoMigrate(&Order{}, &OrderItem{})
 	if err4 != nil {
-		fmt.Println("failed to migrate customer", err4.Error())
+		fmt.Println("failed to migrate order", err4.Error())
 	}
 	DB = db
 	return db
